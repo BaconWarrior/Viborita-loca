@@ -11,6 +11,7 @@ public class SnakeController : MonoBehaviour
     [Range(0, 4)]
     public float speed;
     private Transform _transform;
+    public float angle;
     // Start is called before the first frame update
     void Start()
     {
@@ -20,9 +21,15 @@ public class SnakeController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //movimiento(angle);
+    }
+
+    public void movimiento(float angulo)
+    {
         MoveSnake(_transform.position + _transform.forward * speed);
-        float angle = Input.GetAxis("Horizontal") * 4;
-        _transform.Rotate(0, angle, 0);
+        //angle = Input.GetAxis("Horizontal") * 4;
+        angle = angle * 4;
+        _transform.Rotate(0, angulo, 0);
     }
 
     private void MoveSnake(Vector3 newPosition)
@@ -47,12 +54,12 @@ public class SnakeController : MonoBehaviour
         _transform.position = newPosition;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        Debug.Log(collision.gameObject.tag);
-        if(collision.gameObject.CompareTag("food"))
+        Debug.Log(other.gameObject.tag);
+        if (other.gameObject.CompareTag("food"))
         {
-            Destroy(collision.gameObject);
+            //Destroy(collision.gameObject);
             var bone = Instantiate(BonePrefab);
             Tails.Add(bone.transform);
         }
