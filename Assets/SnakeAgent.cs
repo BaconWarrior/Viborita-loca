@@ -18,11 +18,13 @@ public class SnakeAgent : Agent
     public float speed;
     public float angle;
 
+    public int contador;
     public void movimiento(float angulo)
     {
         MoveSnake(transform.position + transform.forward * speed);
         //angle = Input.GetAxis("Horizontal") * 4;
-        transform.Rotate(0, angulo, 0);
+        this.transform.Rotate(0, angulo, 0);
+        this.contador++;
     }
 
     private void MoveSnake(Vector3 newPosition)
@@ -48,6 +50,7 @@ public class SnakeAgent : Agent
     }
     public override void OnEpisodeBegin()
     {
+        this.contador = 0;
         //Si el agente sale del area de entrenamiento se castiga
         if (this.chocaste)
         {
@@ -99,7 +102,7 @@ public class SnakeAgent : Agent
             EndEpisode();
         }
         //Casitigo (Si choca con muros o su cola)
-        else if (this.chocaste)
+        else if (this.chocaste || contador >= 1200)
         {
             SetReward(-2.0f);
             EndEpisode();
