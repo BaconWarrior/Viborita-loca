@@ -9,6 +9,7 @@ public class SnakeAgent : Agent
 {
     public Transform Target;
     public bool chocaste;
+    bool goal;
     public List<Transform> Tails;
     [Range(0, 2)]
     public float bonesDistance;
@@ -21,7 +22,6 @@ public class SnakeAgent : Agent
     {
         MoveSnake(transform.position + transform.forward * speed);
         //angle = Input.GetAxis("Horizontal") * 4;
-        angle = angle * 4;
         transform.Rotate(0, angulo, 0);
     }
 
@@ -52,10 +52,17 @@ public class SnakeAgent : Agent
         if (this.chocaste)
         {
             this.chocaste = false;
-            Debug.Log("Anarquia");
             this.transform.rotation = Quaternion.identity;
             this.transform.localPosition = new Vector3(0, 0.5f, 0);
-            Tails.Clear();
+            for(int i = 1; i < Tails.Count; i++)
+            {
+                Tails.Remove(Tails[i]);
+            }
+        }
+
+        if(this.goal)
+        {
+            this.goal = false;
         }
         //Mover Target
         Target.localPosition = new Vector3(Random.Range(-10.0f, 10.0f), 0.5f, Random.Range(-10.0f, 10.0f));
@@ -74,22 +81,23 @@ public class SnakeAgent : Agent
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         //Vectores de accion
-        float controlSignal = actionBuffers.ContinuousActions[0];
+        float controlSignal = 0.0f;
+        controlSignal = actionBuffers.ContinuousActions[0];
 
         movimiento(controlSignal);
-        Debug.Log(controlSignal);
+        //Debug.Log(controlSignal);
         //rb.AddForce(controlSignal * forceMultiplier);
 
         //Recompensas
         float distanceToTarger = Vector3.Distance(this.transform.position, Target.localPosition);
 
+        print(distanceToTarger);
         //Distancia al objetivo
-        if (distanceToTarger < 1.0f)
+        if (goal)
         {
             SetReward(1.0f);
             EndEpisode();
         }
-
         //Casitigo (Si choca con muros o su cola)
         else if (this.chocaste)
         {
@@ -103,6 +111,10 @@ public class SnakeAgent : Agent
         if (other.transform.CompareTag("muro")/* || other.transform.CompareTag("tail")*/)
         {
             this.chocaste = true;   
+        }
+        if (other.transform.CompareTag("food"))
+        {
+            this.goal = true;
         }
     }
 }
