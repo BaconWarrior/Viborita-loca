@@ -5,7 +5,8 @@ using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 
-public class SnakeAgent : Agent
+
+public class SnakeRigid : Agent
 {
     public Transform Target;
     public bool chocaste;
@@ -14,21 +15,27 @@ public class SnakeAgent : Agent
     [Range(0, 2)]
     public float bonesDistance;
     public GameObject BonePrefab;
-    [Range(0, 4)]
-    public float speed;
     public float angle;
 
     public int contador;
     public int puntaje;
+    Rigidbody rb;
+
+    Vector3 velocidad;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
     public void movimiento(float angulo)
     {
-        MoveSnake(transform.position + transform.forward * speed);
+        MoveSnake();
         //angle = Input.GetAxis("Horizontal") * 4;
         this.transform.Rotate(0, angulo, 0);
-        this.contador++;
+        //this.rb.velocity = Vector3.zero;
     }
 
-    private void MoveSnake(Vector3 newPosition)
+    private void MoveSnake()
     {
         float sqrDistance = bonesDistance * bonesDistance;
         Vector3 previousPosition = transform.position;
@@ -47,7 +54,7 @@ public class SnakeAgent : Agent
                 break;
             }
         }
-        transform.position = newPosition;
+        //transform.position = newPosition;
     }
     public override void OnEpisodeBegin()
     {
@@ -59,7 +66,7 @@ public class SnakeAgent : Agent
             this.chocaste = false;
             this.transform.rotation = Quaternion.identity;
             this.transform.localPosition = new Vector3(0, 0.5f, 0);
-            for(int i = 1; i < Tails.Count; i++)
+            for (int i = 1; i < Tails.Count; i++)
             {
                 Tails.Remove(Tails[i]);
             }
@@ -79,6 +86,10 @@ public class SnakeAgent : Agent
         sensor.AddObservation(this.angle);
         //sensor.AddObservation(controlador.speed);
     }
+    private void FixedUpdate()
+    {
+        movimiento(angle);
+    }
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
         //Vectores de accion
@@ -87,19 +98,20 @@ public class SnakeAgent : Agent
 
         movimiento(Mathf.Clamp(controlSignal, -3.0f, 3.0f));
         //Debug.Log(controlSignal);
-        //rb.AddForce(controlSignal * forceMultiplier);
+        rb.velocity = transform.forward * 2;
 
         //Recompensas
         float distanceToTarger = Vector3.Distance(this.transform.position, Target.localPosition);
-
+        this.contador++;
         //print(distanceToTarger);
         //Distancia al objetivo
         if (this.goal)
         {
             this.goal = false;
-            SetReward(2.0f);
             contador = 0;
             puntaje++;
+            SetReward(2.0f * puntaje);
+            Target.localPosition = new Vector3(Random.Range(-10.0f, 10.0f), 0.5f, Random.Range(-10.0f, 10.0f));
         }
         //Casitigo (Si choca con muros o su cola)
         if (this.chocaste)
@@ -107,15 +119,15 @@ public class SnakeAgent : Agent
             SetReward(-3.0f);
             EndEpisode();
         }
-        if (contador >= 1200)
+        if (contador >= 2400)
         {
             SetReward(-0.5f);
             contador = 0;
         }
-        if (puntaje >= 1)
+        if (puntaje >= 5)
         {
-            SetReward(3.0f);
-            
+            SetReward(15.0f);
+
             EndEpisode();
         }
     }
@@ -125,14 +137,23 @@ public class SnakeAgent : Agent
         if (other.transform.CompareTag("muro")/* || other.transform.CompareTag("tail")*/)
         {
             Debug.Log("Bonk!!!!!");
-            this.chocaste = true;   
+            this.chocaste = true;
         }
         if (other.transform.CompareTag("food"))
         {
             Debug.Log("yum");
             this.goal = true;
-            this.Target.localPosition = new Vector3(Random.Range(-10.0f, 10.0f), 0.5f, Random.Range(-10.0f, 10.0f));
         }
     }
 
+
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.transform.CompareTag("suelo"))
+        {
+            Debug.Log("$$$$$$$$Me sali del sulo");
+            this.chocaste = true;
+        }
+    }
 }

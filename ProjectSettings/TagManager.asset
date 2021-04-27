@@ -7,6 +7,7 @@ TagManager:
   - food
   - muro
   - tail
+  - suelo
   layers:
   - Default
   - TransparentFX
